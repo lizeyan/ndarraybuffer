@@ -167,3 +167,13 @@ def test_to_list() -> None:
     arr = ArrayBuffer()
     arr.extend(np.arange(10))
     assert list(arr) == list(range(10))
+
+
+def test_setitem() -> None:
+    arr = ArrayBuffer(dtype=np.int64)
+    arr.extend(np.arange(10))
+    arr[0] += 1
+    arr[-1] = arr[-1] + 1
+    assert arr[0] == 1
+    assert arr[-1] == 10
+

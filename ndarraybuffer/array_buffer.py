@@ -94,7 +94,7 @@ class ArrayBuffer(object):
         ...
 
     @overload
-    def __setitem__(self, key: IndexArrayType | SupportsIndex, value: ScalarType) -> None:
+    def __setitem__(self, key: IndexArrayType | SupportsIndex, value: ScalarType | ArrayLike) -> None:
         ...
 
     def __setitem__(
