@@ -2,5 +2,6 @@
 <project version="4">
   <component name="RuffConfigService">
     <option name="globalRuffLspExecutablePath" value="$PROJECT_DIR$/../.local/bin/ruff" />
+    <option name="projectRuffExecutablePath" value="$PROJECT_DIR$/../volc-tsa/.venv/bin/ruff" />
   </component>
 </project>

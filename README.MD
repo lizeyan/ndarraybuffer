@@ -8,6 +8,10 @@ Wrap `numpy.ndarray` to support fast both-side insertion/deletion and size limit
 - pickleable
 - JSON serializable
 
+```bash
+pip install ndarraybuffer
+```
+
 ### Both-side insertion/deletion
 ```python
 arr = ArrayBuffer()
