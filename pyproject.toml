@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "ndarraybuffer"
+version = "0.1.0"
+description = "NDArray with both-side insertion/deletion and size limit"
+authors = ["Zeyan Li 李则言 <lizeyan.42@bytedance.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = ">=1.21"
+typing-extensions = "^4.10.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+coverage = "^7.4.3"
+pyprof = ">=1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.run]
+relative_files = true
