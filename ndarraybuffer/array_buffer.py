@@ -196,7 +196,7 @@ class ArrayBuffer(object):
         self._array[self._stop:self._stop + ol] = other[:]
         self._stop += ol
         if self.max_len is not None and len(self) > self.max_len:
-            self.popleft(1)
+            self.popleft(len(self) - self.max_len)
         return self
 
     def extendleft(self, other: ArrayLike) -> Self:
@@ -208,7 +208,7 @@ class ArrayBuffer(object):
         self._array[self._start - ol:self._start] = other[:]
         self._start -= ol
         if self.max_len is not None and len(self) > self.max_len:
-            self.pop(1)
+            self.pop(len(self) - self.max_len)
         return self
 
     def pop(self, count: int) -> NDArray:

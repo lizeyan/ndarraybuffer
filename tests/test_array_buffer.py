@@ -159,7 +159,7 @@ def test_operations() -> None:
     assert len(arr[np.where(arr >= 2)]) == 8
     assert len(arr[arr % 2 == 0]) == 5
     assert arr @ np.ones(10) == 45
-    
+
     assert np.array_equal(-arr, -np.arange(10))
 
 
@@ -177,3 +177,10 @@ def test_setitem() -> None:
     assert arr[0] == 1
     assert arr[-1] == 10
 
+
+def test_extend_large():
+    arr = ArrayBuffer(dtype=np.int64, max_len=10)
+    arr.extend(np.arange(100))
+    assert np.array_equal(arr, np.arange(90, 100))
+    arr.extendleft(np.arange(100))
+    assert np.array_equal(arr, np.arange(0, 10))
