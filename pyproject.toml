@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ndarraybuffer"
-version = "0.1.2"
+version = "0.1.3"
 description = "NDArray with both-side insertion/deletion and size limit"
 authors = ["Zeyan Li 李则言 <lizeyan.42@bytedance.com>"]
 license = "MIT"
@@ -23,3 +23,18 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
 relative_files = true
+
+[tool.mypy]
+mypy_path = "$MYPY_CONFIG_FILE_DIR"
+follow_imports = "silent"
+disallow_untyped_defs = true
+disallow_any_unimported = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+show_error_codes = true
+
+plugins = [
+    'numpy.typing.mypy_plugin',
+]

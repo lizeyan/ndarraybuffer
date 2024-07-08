@@ -2,8 +2,8 @@ import enum
 from typing import Iterator, Any, SupportsIndex
 
 import numpy as np
-from numpy.typing import DTypeLike, NDArray, ArrayLike
-from typing_extensions import Self, overload
+from numpy.typing import NDArray, ArrayLike, DTypeLike
+from typing_extensions import Self, overload, TypeVar, Generic
 
 __all__ = [
     "ArrayBuffer",
@@ -19,8 +19,10 @@ class Side(enum.IntEnum):
 ScalarType = np.number | np.bool_ | bool | int | float
 IndexArrayType = NDArray[np.bool_] | NDArray[np.integer]
 
+ScalarTypeVar = TypeVar("ScalarTypeVar", bound=np.generic, covariant=True)
 
-class ArrayBuffer(object):
+
+class ArrayBuffer(Generic[ScalarTypeVar]):
     """
     1. 支持双向 push/pop
     2. 支持随机访问
@@ -37,7 +39,7 @@ class ArrayBuffer(object):
             init_shape = (init_shape,)
         self._dtype = np.dtype(dtype)
         self._init_shape = init_shape
-        self._array: NDArray = np.zeros(init_shape, dtype)
+        self._array: NDArray[ScalarTypeVar] = np.zeros(init_shape, dtype)
         self._start: int = 0
         self._stop: int = 0
         self._extensions = np.zeros(2048, dtype=[
@@ -69,7 +71,7 @@ class ArrayBuffer(object):
     def shape(self) -> tuple[int, ...]:
         return len(self), *self._init_shape[1:]
 
-    def __array__(self, *args, **kwargs) -> NDArray:  # type: ignore
+    def __array__(self, *args: Any, **kwargs: Any) -> NDArray[ScalarTypeVar]:
         return np.asarray(self._array[self._start:self._stop, ...], *args, **kwargs)
 
     def __len__(self) -> int:
@@ -238,73 +240,73 @@ class ArrayBuffer(object):
         self._check_enlarge(Side.NONE, 0)
         return self
 
-    def __add__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() + other)
+    def __add__(self, other: ArrayLike) -> NDArray[ScalarTypeVar]:
+        return np.asarray(self.__array__() + np.asarray(other, dtype=self.dtype))
 
     def __iadd__(self, other: ArrayLike) -> Self:
-        arr = self.__array__()
-        arr += other
+        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        self._array[self._start:self._stop, ...] = np.add(self._array[self._start:self._stop, ...], other_arr)
         return self
 
     def __sub__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() - other)
+        return np.asarray(self.__array__() - np.asarray(other, dtype=self.dtype))
 
     def __isub__(self, other: ArrayLike) -> Self:
-        arr = self.__array__()
-        arr -= other
+        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        self._array[self._start:self._stop, ...] = np.subtract(self._array[self._start:self._stop, ...], other_arr)
         return self
 
     def __mul__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() * other)
+        return np.asarray(self.__array__() * np.asarray(other, dtype=self.dtype))
 
     def __imul__(self, other: ArrayLike) -> Self:
-        arr = self.__array__()
-        arr *= other
+        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        self._array[self._start:self._stop, ...] = np.multiply(self._array[self._start:self._stop, ...], other_arr)
         return self
 
     def __truediv__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() / other)
+        return np.asarray(self.__array__() / np.asarray(other, dtype=self.dtype))
 
     def __itruediv__(self, other: ArrayLike) -> Self:
-        arr = self.__array__()
-        arr /= other
+        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        self._array[self._start:self._stop, ...] = np.true_divide(self._array[self._start:self._stop, ...], other_arr)
         return self
 
     def __floordiv__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() // other)
+        return np.asarray(self.__array__() // np.asarray(other, dtype=self.dtype))
 
     def __ifloordiv__(self, other: ArrayLike) -> Self:
-        arr = self.__array__()
-        arr //= other
+        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        self._array[self._start:self._stop, ...] = np.floor_divide(self._array[self._start:self._stop, ...], other_arr)
         return self
 
     def __lt__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() < other)
+        return np.asarray(self.__array__() < np.asarray(other, dtype=self.dtype))
 
     def __gt__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() > other)
+        return np.asarray(self.__array__() > np.asarray(other, dtype=self.dtype))
 
     def __le__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() <= other)
+        return np.asarray(self.__array__() <= np.asarray(other, dtype=self.dtype))
 
     def __ge__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() >= other)
+        return np.asarray(self.__array__() >= np.asarray(other, dtype=self.dtype))
 
     def __eq__(self, other: ArrayLike) -> NDArray[np.bool_]:  # type: ignore
-        return np.asarray(self.__array__() == other)
+        return np.asarray(self.__array__() == np.asarray(other, dtype=self.dtype))
 
     def __mod__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() % other)
+        return np.asarray(self.__array__() % np.asarray(other, dtype=self.dtype))
 
     def __imod__(self, other: ArrayLike) -> Self:
-        arr = self.__array__()
-        arr %= other
+        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        self._array[self._start:self._stop, ...] = np.mod(self._array[self._start:self._stop, ...], other_arr)
         return self
 
     def __matmul__(self, other: ArrayLike) -> NDArray:
-        return np.asarray(self.__array__() @ other)
+        return np.asarray(self.__array__() @ np.asarray(other, dtype=self.dtype))
 
-    def __neg__(self) -> NDArray:
+    def __neg__(self) -> NDArray[ScalarTypeVar]:
         return -self.__array__()
 
     def __repr__(self) -> str:

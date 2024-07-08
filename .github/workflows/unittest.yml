@@ -36,6 +36,9 @@ jobs:
         run: |
           poetry config virtualenvs.create false
           poetry install --no-root
+      - name: Run Mypy Checks
+        run: |
+          PYTHONPATH=$(realpath .) mypy --config pyproject.toml .
       - name: Test with pytest
         run: |
           PYTHONPATH=$(realpath .) coverage run -m pytest tests
