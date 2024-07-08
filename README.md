@@ -5,9 +5,9 @@
 | Name                           |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------- | -------: | -------: | ------: | --------: |
 | ndarraybuffer/\_\_init\_\_.py  |        1 |        0 |    100% |           |
-| ndarraybuffer/array\_buffer.py |      189 |       14 |     93% |80, 84, 94, 98, 269-271, 277-279, 300-302, 311 |
+| ndarraybuffer/array\_buffer.py |      190 |       14 |     93% |82, 86, 96, 100, 271-273, 279-281, 302-304, 313 |
 | tests/test\_array\_buffer.py   |      147 |        0 |    100% |           |
-|                      **TOTAL** |  **337** |   **14** | **96%** |           |
+|                      **TOTAL** |  **338** |   **14** | **96%** |           |
 
 
 ## Setup coverage badge
