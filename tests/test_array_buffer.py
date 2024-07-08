@@ -121,8 +121,8 @@ def test_conversion_to_ndarray() -> None:
     arr = ArrayBuffer[np.float64]()
     arr.extend(np.arange(10))
     assert np.array_equal(np.asarray(arr), np.arange(10))
-    assert np.array_equal(np.asarray(arr, dtype=np.int_), np.arange(10))
-    assert np.array_equal(np.asarray(arr, dtype=np.float_), np.arange(10))
+    assert np.array_equal(np.asarray(arr, dtype=np.int64), np.arange(10))
+    assert np.array_equal(np.asarray(arr, dtype=np.float64), np.arange(10))
 
 
 def test_array_does_not_copy() -> None:
