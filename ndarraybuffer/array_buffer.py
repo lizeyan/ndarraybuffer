@@ -3,10 +3,12 @@ from typing import Iterator, Any, SupportsIndex
 
 import numpy as np
 from numpy.typing import NDArray, ArrayLike, DTypeLike
-from typing_extensions import Self, overload, TypeVar, Generic
+from typing_extensions import Self, overload, TypeVar, Generic, TypeAlias
 
 __all__ = [
     "ArrayBuffer",
+    "empty",
+    "load",
 ]
 
 
@@ -21,8 +23,11 @@ IndexArrayType = NDArray[np.bool_] | NDArray[np.integer]
 
 ScalarTypeVar = TypeVar("ScalarTypeVar", bound=np.generic, covariant=True)
 
+_DType_co = TypeVar("_DType_co", covariant=True, bound=np.dtype[Any])
+_NDArrayType: TypeAlias = np.ndarray[Any, _DType_co]
 
-class ArrayBuffer(Generic[ScalarTypeVar]):
+
+class _ArrayBuffer(Generic[_DType_co]):
     """
     1. 支持双向 push/pop
     2. 支持随机访问
@@ -39,7 +44,7 @@ class ArrayBuffer(Generic[ScalarTypeVar]):
             init_shape = (init_shape,)
         self._dtype = np.dtype(dtype)
         self._init_shape = init_shape
-        self._array: NDArray[ScalarTypeVar] = np.zeros(init_shape, dtype)
+        self._array: _NDArrayType = np.zeros(init_shape, dtype)
         self._start: int = 0
         self._stop: int = 0
         self._extensions = np.zeros(2048, dtype=[
@@ -123,7 +128,7 @@ class ArrayBuffer(Generic[ScalarTypeVar]):
 
     @staticmethod
     def load(state_dict: dict) -> 'ArrayBuffer':
-        ret = ArrayBuffer.__new__(ArrayBuffer)
+        ret = _ArrayBuffer.__new__(_ArrayBuffer)
         ret.__setstate__(state_dict)
         return ret
 
@@ -135,7 +140,7 @@ class ArrayBuffer(Generic[ScalarTypeVar]):
         }
 
     def __setstate__(self, state: dict) -> None:
-        ArrayBuffer.__init__(self, dtype=np.dtype(state['dtype']), max_len=state['max_len'])
+        _ArrayBuffer.__init__(self, dtype=np.dtype(state['dtype']), max_len=state['max_len'])
         self.extend(state['data'])
 
     def _check_enlarge(self, side: Side, extension_length: int) -> None:
@@ -176,7 +181,7 @@ class ArrayBuffer(Generic[ScalarTypeVar]):
 
         assert new_stop - new_start == len(self)
 
-        new_arr = np.zeros(new_shape, self._dtype)
+        new_arr: np.ndarray[Any, _DType_co] = np.zeros(new_shape, self._dtype)  # type: ignore
         if new_start < new_stop:
             new_arr[new_start:new_stop] = self[:]
 
@@ -240,74 +245,87 @@ class ArrayBuffer(Generic[ScalarTypeVar]):
         self._check_enlarge(Side.NONE, 0)
         return self
 
-    def __add__(self, other: ArrayLike) -> NDArray[ScalarTypeVar]:
+    def __add__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() + np.asarray(other, dtype=self.dtype))
 
     def __iadd__(self, other: ArrayLike) -> Self:
-        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        other_arr: _NDArrayType = np.asarray(other, dtype=self.dtype)
         self._array[self._start:self._stop, ...] = np.add(self._array[self._start:self._stop, ...], other_arr)
         return self
 
-    def __sub__(self, other: ArrayLike) -> NDArray:
+    def __sub__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() - np.asarray(other, dtype=self.dtype))
 
     def __isub__(self, other: ArrayLike) -> Self:
-        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        other_arr: _NDArrayType = np.asarray(other, dtype=self.dtype)
         self._array[self._start:self._stop, ...] = np.subtract(self._array[self._start:self._stop, ...], other_arr)
         return self
 
-    def __mul__(self, other: ArrayLike) -> NDArray:
+    def __mul__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() * np.asarray(other, dtype=self.dtype))
 
     def __imul__(self, other: ArrayLike) -> Self:
-        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        other_arr: _NDArrayType = np.asarray(other, dtype=self.dtype)
         self._array[self._start:self._stop, ...] = np.multiply(self._array[self._start:self._stop, ...], other_arr)
         return self
 
-    def __truediv__(self, other: ArrayLike) -> NDArray:
+    def __truediv__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() / np.asarray(other, dtype=self.dtype))
 
     def __itruediv__(self, other: ArrayLike) -> Self:
-        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        other_arr: _NDArrayType = np.asarray(other, dtype=self.dtype)
         self._array[self._start:self._stop, ...] = np.true_divide(self._array[self._start:self._stop, ...], other_arr)
         return self
 
-    def __floordiv__(self, other: ArrayLike) -> NDArray:
+    def __floordiv__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() // np.asarray(other, dtype=self.dtype))
 
     def __ifloordiv__(self, other: ArrayLike) -> Self:
-        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        other_arr: _NDArrayType = np.asarray(other, dtype=self.dtype)
         self._array[self._start:self._stop, ...] = np.floor_divide(self._array[self._start:self._stop, ...], other_arr)
         return self
 
-    def __lt__(self, other: ArrayLike) -> NDArray:
+    def __lt__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() < np.asarray(other, dtype=self.dtype))
 
-    def __gt__(self, other: ArrayLike) -> NDArray:
+    def __gt__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() > np.asarray(other, dtype=self.dtype))
 
-    def __le__(self, other: ArrayLike) -> NDArray:
+    def __le__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() <= np.asarray(other, dtype=self.dtype))
 
-    def __ge__(self, other: ArrayLike) -> NDArray:
+    def __ge__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() >= np.asarray(other, dtype=self.dtype))
 
     def __eq__(self, other: ArrayLike) -> NDArray[np.bool_]:  # type: ignore
         return np.asarray(self.__array__() == np.asarray(other, dtype=self.dtype))
 
-    def __mod__(self, other: ArrayLike) -> NDArray:
+    def __mod__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() % np.asarray(other, dtype=self.dtype))
 
     def __imod__(self, other: ArrayLike) -> Self:
-        other_arr: NDArray[ScalarTypeVar] = np.asarray(other, dtype=self.dtype)
+        other_arr: _NDArrayType = np.asarray(other, dtype=self.dtype)
         self._array[self._start:self._stop, ...] = np.mod(self._array[self._start:self._stop, ...], other_arr)
         return self
 
-    def __matmul__(self, other: ArrayLike) -> NDArray:
+    def __matmul__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() @ np.asarray(other, dtype=self.dtype))
 
-    def __neg__(self) -> NDArray[ScalarTypeVar]:
+    def __neg__(self) -> _NDArrayType:
         return -self.__array__()
 
     def __repr__(self) -> str:
         return f"ArrayBuffer(data={self.__array__()!r}, max_len={self.max_len})"
+
+
+ArrayBuffer = _ArrayBuffer[np.dtype[ScalarTypeVar]]  # To simplify type hinting
+
+
+def empty(dtype: DTypeLike, max_len: int | None = None) -> ArrayBuffer:
+    return _ArrayBuffer(dtype=dtype, max_len=max_len)
+
+
+def load(state_dict: dict, dtype: DTypeLike | None = None) -> ArrayBuffer:
+    if dtype is not None:
+        state_dict = state_dict | {"dtype": np.dtype(dtype).str}
+    return _ArrayBuffer.load(state_dict)

@@ -2,13 +2,14 @@ import json
 import pickle
 
 import numpy as np
+from numpy.typing import NDArray
 from pyprof import profile, Profiler
 
-from ndarraybuffer import ArrayBuffer
+from ndarraybuffer import empty, ArrayBuffer, load
 
 
 def test_array_buffer_push_pop() -> None:
-    arr: ArrayBuffer[np.float64] = ArrayBuffer(dtype=np.float64)
+    arr: ArrayBuffer = empty(np.float64)
     assert len(arr) == 0
     assert arr.max_len is None
     assert arr.shape == (0,)
@@ -107,6 +108,24 @@ def test_json_serialization() -> None:
     assert np.array_equal(rec, np.arange(10))
 
 
+def test_json_serialization_astype() -> None:
+    arr = ArrayBuffer[np.float64](max_len=10, dtype=np.float64)
+    arr.extend(np.arange(10))
+    assert isinstance(arr[0], np.float64)
+    state_dict = arr.state_dict()
+    rec = load(json.loads(json.dumps(state_dict)))
+    assert rec.max_len == 10
+    assert rec.dtype == np.float64
+    assert isinstance(rec[0], np.float64)
+    assert np.array_equal(rec, np.arange(10))
+
+    rec2 = load(json.loads(json.dumps(state_dict)), dtype=np.int64)
+    assert rec2.max_len == 10
+    assert rec2.dtype == np.int64
+    assert isinstance(rec2[0], np.int64)
+    assert np.array_equal(rec2, np.arange(10))
+
+
 def test_efficiency() -> None:
     arr = ArrayBuffer[np.float64](max_len=10, dtype=np.float64)
 
@@ -114,7 +133,7 @@ def test_efficiency() -> None:
         for i in range(10000):
             profile(arr.append)(i)
             assert len(arr) <= 10
-    assert Profiler.get("//ArrayBuffer.append").average < 1e-4
+    assert Profiler.get("//_ArrayBuffer.append").average < 1e-4
 
 
 def test_conversion_to_ndarray() -> None:
@@ -128,7 +147,7 @@ def test_conversion_to_ndarray() -> None:
 def test_array_does_not_copy() -> None:
     arr = ArrayBuffer[np.float64]()
     arr.extend(np.arange(10))
-    a = np.asarray(arr)
+    a: NDArray = np.asarray(arr)
     a[0] = -1
     assert np.array_equal(arr, a)
     assert arr[0] == -1
@@ -143,13 +162,13 @@ def test_operations() -> None:
     assert np.array_equal(arr / 2, np.arange(10) / 2)
     assert np.array_equal(arr // 2, np.arange(10) // 2)
     arr += 1
-    assert isinstance(arr, ArrayBuffer)
+    assert isinstance(arr, type(empty(arr.dtype)))
     assert np.array_equal(arr, np.arange(1, 11))
     arr *= 2
-    assert isinstance(arr, ArrayBuffer)
+    assert isinstance(arr, type(empty(arr.dtype)))
     assert np.array_equal(arr, np.arange(1, 11) * 2)
     arr -= np.arange(2, 12)
-    assert isinstance(arr, ArrayBuffer)
+    assert isinstance(arr, type(empty(arr.dtype)))
     assert np.array_equal(arr, np.arange(10))
 
     assert len(arr[np.where(arr < 2)]) == 2
