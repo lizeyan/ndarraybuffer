@@ -203,3 +203,10 @@ def test_extend_large() -> None:
     assert np.array_equal(arr, np.arange(90, 100))
     arr.extendleft(np.arange(100))
     assert np.array_equal(arr, np.arange(0, 10))
+
+
+def test_empty_array_op() -> None:
+    arr = ArrayBuffer(dtype=np.int64)
+    assert len(arr == 0) == 0
+    assert len(arr != 0) == 0
+    assert len(arr + 0) == 0

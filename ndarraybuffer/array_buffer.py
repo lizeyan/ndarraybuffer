@@ -298,7 +298,10 @@ class _ArrayBuffer(Generic[_DType_co]):
         return np.asarray(self.__array__() >= np.asarray(other, dtype=self.dtype))
 
     def __eq__(self, other: ArrayLike) -> NDArray[np.bool_]:  # type: ignore
-        return np.asarray(self.__array__() == np.asarray(other, dtype=self.dtype))
+        return np.equal(self._array[self._start:self._stop, ...], other)
+
+    def __ne__(self, other: ArrayLike) -> NDArray[np.bool_]:  # type: ignore
+        return np.not_equal(self._array[self._start:self._stop, ...], other)
 
     def __mod__(self, other: ArrayLike) -> _NDArrayType:
         return np.asarray(self.__array__() % np.asarray(other, dtype=self.dtype))
