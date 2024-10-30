@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Precommit" type="CompoundRunConfigurationType">
+    <toRun name="Mypy" type="PythonConfigurationType" />
+    <toRun name="Pyright" type="PythonConfigurationType" />
+    <toRun name="Python tests in tests" type="tests" />
+    <method v="2" />
+  </configuration>
+</component>

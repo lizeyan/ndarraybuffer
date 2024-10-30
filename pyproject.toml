@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ndarraybuffer"
-version = "0.2.0"
+version = "0.2.1"
 description = "NDArray with both-side insertion/deletion and size limit"
 authors = ["Zeyan Li 李则言 <lizeyan.42@bytedance.com>"]
 license = "MIT"
@@ -16,6 +16,7 @@ pytest = "^8.1.1"
 coverage = "^7.4.3"
 pyprof = ">=1.0.0"
 mypy = "^1.9.0"
+pyright = "^1.1.386"
 
 [build-system]
 requires = ["poetry-core"]
@@ -38,3 +39,30 @@ show_error_codes = true
 plugins = [
     'numpy.typing.mypy_plugin',
 ]
+
+
+[tool.pyright]
+include = [
+    "src",
+    "tests",
+]
+pythonVersion = "3.10"
+verboseOutput = true
+
+reportMissingImports = "error"
+reportAttributeAccessIssue = false
+reportWildcardImportFromLibrary = false
+reportMatchNotExhaustive = true
+
+reportInvalidStringEscapeSequence = "error"
+reportInvalidTypeVarUse = "error"
+reportSelfClsParameterName = "error"
+reportUnsupportedDunderAll = "error"
+reportUntypedNamedTuple = "error"
+reportUnusedImport = "error"
+#reportMissingParameterType = "error"
+reportDuplicateImport = "error"
+
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true

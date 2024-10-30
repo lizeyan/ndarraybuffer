@@ -1,4 +1,5 @@
 import enum
+from types import EllipsisType
 from typing import Iterator, Any, SupportsIndex
 
 import numpy as np
@@ -23,8 +24,8 @@ IndexArrayType = NDArray[np.bool_] | NDArray[np.integer]
 
 ScalarTypeVar = TypeVar("ScalarTypeVar", bound=np.generic, covariant=True)
 
-_DType_co = TypeVar("_DType_co", covariant=True, bound=np.dtype[Any])
-_NDArrayType: TypeAlias = np.ndarray[Any, _DType_co]
+_DType_co = TypeVar("_DType_co", covariant=True, bound=np.generic)
+_NDArrayType: TypeAlias = NDArray[_DType_co]
 
 
 class _ArrayBuffer(Generic[_DType_co]):
@@ -36,7 +37,7 @@ class _ArrayBuffer(Generic[_DType_co]):
 
     def __init__(
             self, dtype: DTypeLike = np.float64,
-            init_shape: tuple[int] | int = (2048,),
+            init_shape: tuple[int, ...] | int = (2048,),
             max_len: int | None = None,
     ):
 
@@ -76,24 +77,28 @@ class _ArrayBuffer(Generic[_DType_co]):
     def shape(self) -> tuple[int, ...]:
         return len(self), *self._init_shape[1:]
 
-    def __array__(self, *args: Any, **kwargs: Any) -> NDArray[ScalarTypeVar]:
+    def __array__(self, *args: Any, **kwargs: Any) -> _NDArrayType:
         return np.asarray(self._array[self._start:self._stop, ...], *args, **kwargs)
 
     def __len__(self) -> int:
         return self._stop - self._start
 
     @overload
-    def __getitem__(self, key: slice | tuple[IndexArrayType, ...]) -> NDArray:
+    def __getitem__(self, key: slice | tuple[IndexArrayType | slice | int | EllipsisType, ...]) -> _NDArrayType:
         ...
 
     @overload
-    def __getitem__(self, key: IndexArrayType | SupportsIndex) -> NDArray | ScalarType:
+    def __getitem__(self, key: IndexArrayType) -> _NDArrayType:
+        ...
+
+    @overload
+    def __getitem__(self, key: int) -> _DType_co:
         ...
 
     def __getitem__(
             self,
-            key: slice | SupportsIndex | NDArray | tuple[IndexArrayType, ...]
-    ) -> NDArray | ScalarType:
+            key: slice | int | IndexArrayType | tuple[IndexArrayType | slice | int | EllipsisType, ...] | EllipsisType
+    ) -> NDArray[_DType_co] | _DType_co:
         return self._array[self._start:self._stop][key]
 
     @overload
@@ -181,7 +186,7 @@ class _ArrayBuffer(Generic[_DType_co]):
 
         assert new_stop - new_start == len(self)
 
-        new_arr: np.ndarray[Any, _DType_co] = np.zeros(new_shape, self._dtype)  # type: ignore
+        new_arr: _NDArrayType = np.zeros(new_shape, self._dtype)
         if new_start < new_stop:
             new_arr[new_start:new_stop] = self[:]
 
@@ -218,7 +223,7 @@ class _ArrayBuffer(Generic[_DType_co]):
             self.pop(len(self) - self.max_len)
         return self
 
-    def pop(self, count: int) -> NDArray:
+    def pop(self, count: int) -> _NDArrayType:
 
         count = min(count, len(self))
 
@@ -228,7 +233,7 @@ class _ArrayBuffer(Generic[_DType_co]):
 
         return ret
 
-    def popleft(self, count: int) -> NDArray:
+    def popleft(self, count: int) -> _NDArrayType:
 
         count = min(count, len(self))
 
@@ -321,7 +326,7 @@ class _ArrayBuffer(Generic[_DType_co]):
         return f"ArrayBuffer(data={self.__array__()!r}, max_len={self.max_len})"
 
 
-ArrayBuffer = _ArrayBuffer[np.dtype[ScalarTypeVar]]  # To simplify type hinting
+ArrayBuffer = _ArrayBuffer[ScalarTypeVar]  # To simplify type hinting
 
 
 def empty(dtype: DTypeLike, max_len: int | None = None) -> ArrayBuffer:

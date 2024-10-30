@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.10", "3.11", ]
+        python-version: [ "3.10", "3.11", "3.12", "3.13" ]
         poetry-version: [ "1.8.2" ]
 
     steps:
@@ -36,6 +36,9 @@ jobs:
         run: |
           poetry config virtualenvs.create false
           poetry install --no-root
+      - name: Run Pyright Checks
+        run: |
+          PYTHONPATH=$(realpath .) python -m pyright .
       - name: Run Mypy Checks
         run: |
           PYTHONPATH=$(realpath .) mypy --config pyproject.toml .
